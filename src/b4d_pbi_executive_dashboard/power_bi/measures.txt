@@ -1,0 +1,70 @@
+LastMrcClient = 
+VAR CurrentDate = MAX('Date'[Date])
+RETURN
+CALCULATE(
+    SUM(clickup_cartera_fact[estimated_mrc_value]),
+    FILTER(
+        clickup_cartera_fact,
+        clickup_cartera_fact[fact_date] = 
+            CALCULATE(
+                MAX(clickup_cartera_fact[fact_date]),
+                FILTER(
+                    clickup_cartera_fact,
+                    clickup_cartera_fact[fact_date] <= CurrentDate &&
+                    clickup_cartera_fact[cartera_name] = EARLIER(clickup_cartera_fact[cartera_name])
+                )
+            )
+    )
+) 
+
+
+CierreMRC = 
+VAR result = CALCULATE([MrcTotal1], FILTER(b4d_cartera_032625_1, b4d_cartera_032625_1[status_1] == "4 - Cerrado"))
+RETURN result
+
+EstimatedMrcSum = SUM(clickup_cartera_fact[estimated_mrc_value])
+
+EstimatedOtcSum = SUM(clickup_cartera_fact[estimated_otc_value])
+
+LastMrcByStage = 
+CALCULATE(
+    [LastMrcClient],
+    ALLEXCEPT(b4d_cartera_032625_1, b4d_cartera_032625_1[status_1])
+)
+
+LastOtcByStage = 
+CALCULATE(
+    _Measure[LastOtcClient],
+    ALLEXCEPT(clickup_cartera_fact, clickup_cartera_fact[stage])
+)
+
+
+LastOtcClient = 
+VAR CurrentDate = MAX('Date'[Date])
+RETURN
+CALCULATE(
+    SUM(clickup_cartera_fact[estimated_otc_value]),
+    FILTER(
+        clickup_cartera_fact,
+        clickup_cartera_fact[fact_date] = 
+            CALCULATE(
+                MAX(clickup_cartera_fact[fact_date]),
+                FILTER(
+                    clickup_cartera_fact,
+                    clickup_cartera_fact[fact_date] <= CurrentDate &&
+                    clickup_cartera_fact[cartera_name] = EARLIER(clickup_cartera_fact[cartera_name])
+                )
+            )
+    )
+) 
+
+
+MrcOtcTotal = [EstimatedMrcSum] + [EstimatedOtcSum]
+
+OtcTotal = IF(
+    HASONEVALUE(clickup_cartera_last_date[stage_1]),
+    SUM(clickup_cartera_last_date[estimated_otc_value])
+)
+
+
+TargetClosingMRC = 10033
